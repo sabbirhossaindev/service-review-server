@@ -38,11 +38,20 @@ async function run() {
         const serviceCollection = client.db('doctorServices').collection('services');
         const orderCollection = client.db('doctorServices').collection('orders');
 
+        // jwt
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d'})
             res.send({token})
         })
+
+        // limit for 3 services
+        app.get('/limitsServices', async (req, res) => {
+            const query = {}
+            const cursor = serviceCollection.find(query).limit(3);
+            const services = await cursor.toArray();
+            res.send(services);
+        });
 
         // all router paba...
         app.get('/services', async (req, res) => {
@@ -52,27 +61,13 @@ async function run() {
             res.send(services);
         });
 
-        app.get('/limitsServices', async (req, res) => {
-            const query = {}
-            const cursor = serviceCollection.find(query).limit(3);
-            const services = await cursor.toArray();
-            res.send(services);
-        });
-        // app.get('/services-limit', async (req, res) => {
-        //     const query = {}
-        //     const myShort = {data: -1, time: -1}
-        //     const cursor = serviceCollection.find(query).short(myShort).limit(3);
-        //     const services = await cursor.toArray();
-        //     res.send(services);
-        // });
-
         // specific 1 id for...
-        // app.get('/services/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: ObjectId(id) };
-        //     const service = await serviceCollection.findOne(query);
-        //     res.send(service);
-        // });
+        app.get('/services/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const service = await serviceCollection.findOne(query);
+            res.send(service);
+        });
 
         // orders api & added verifyJWT
         // app.get('/orders', verifyJWT, async (req, res) => {
@@ -95,33 +90,33 @@ async function run() {
         //     res.send(orders);
         // });
 
-        // app.post('/orders', verifyJWT, async (req, res) => {
-        //     const order = req.body;
-        //     const result = await orderCollection.insertOne(order);
-        //     res.send(result);
-        // });
+        app.post('/services', verifyJWT, async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
+        });
 
         // // update
-        // app.patch('/orders/:id', verifyJWT, async (req, res) => {
-        //     const id = req.params.id;
-        //     const status = req.body.status
-        //     const query = { _id: ObjectId(id) }
-        //     const updatedDoc = {
-        //         $set:{
-        //             status: status
-        //         }
-        //     }
-        //     const result = await orderCollection.updateOne(query, updatedDoc);
-        //     res.send(result);
-        // })
+        app.patch('/services/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const status = req.body.status
+            const query = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set:{
+                    status: status
+                }
+            }
+            const result = await orderCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        })
 
         // delete
-        // app.delete('/orders/:id', verifyJWT, async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: ObjectId(id) };
-        //     const result = await orderCollection.deleteOne(query);
-        //     res.send(result);
-        // })
+        app.delete('/services/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
+            res.send(result);
+        })
       
     }
     finally {
