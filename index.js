@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { request, query } = require('express');
 require('dotenv').config();
 
 const app = express();
@@ -41,6 +42,7 @@ async function run() {
         // jwt
         app.post('/jwt', (req, res) => {
             const user = req.body;
+            // console.log(user);
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' })
             res.send({token})
         })
@@ -62,15 +64,19 @@ async function run() {
         });
 
         // specific 1 id for...
-        app.get('/services/:id', async (req, res) => {
-            const id = req.params.id;
-            const query = { _id: ObjectId(id) };
+        app.get('/services', async (req, res) => {
+            let query = {};
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                }
+            }
             const service = await serviceCollection.findOne(query);
             res.send(service);
         });
 
          
-         app.get('/orders', verifyJWT, async (req, res) => {
+         app.get('/myReview', verifyJWT, async (req, res) => {
             
             const decoded = req.decoded;
             
@@ -86,20 +92,13 @@ async function run() {
             }
 
             const cursor = submitCollection.find(query);
-            const orders = await cursor.toArray();
-            res.send(orders);
+            const myReview = await cursor.toArray();
+            res.send(myReview);
         });
 
         app.post('/services', async (req, res) => {
             const service = req.body;
-            console.log(service);
-            const doc = {
-                service: service.service,
-                serviceName: service.serviceName,
-                customer: service.customer,
-                message: service.message
-            }
-            const result = await submitCollection.insertOne(doc)
+            const result = await submitCollection.insertOne(service)
             res.send(result)
         });
 
