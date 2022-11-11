@@ -60,20 +60,20 @@ async function run() {
             const query = {}
             const cursor = serviceCollection.find(query);
             const services = await cursor.toArray();
+            console.log('services', services);
             res.send(services);
         });
 
-        // specific 1 id for...
-        app.get('/services', async (req, res) => {
-            let query = {};
-            if (req.query.email) {
-                query = {
-                    email: req.query.email
-                }
-            }
+
+        //Get a single id
+        app.get('/service/:id', async (req, res) => {
+        const id = req.params.id;
+        console.log('id ', id);
+        const query = { _id: ObjectId(id) };
             const service = await serviceCollection.findOne(query);
-            res.send(service);
-        });
+            console.log('service', service);
+        res.send(service);
+        })
 
          
          app.get('/myReview', verifyJWT, async (req, res) => {
